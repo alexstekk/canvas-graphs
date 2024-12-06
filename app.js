@@ -1,4 +1,4 @@
-//Globals
+//Global variables
 const axis = ['X', 'Y', null];
 const averageTableColumns = 2;
 let initXValue = 1;
@@ -14,6 +14,7 @@ let data = {
 //Events
 document.addEventListener('DOMContentLoaded', initApp);
 
+//Init app
 function initApp() {
     if (!data.first.length) {
         setInitCoordinates();
@@ -25,6 +26,7 @@ function initApp() {
         createTable(data[tableId], tableId);
     }
 
+    //Add fill table button
     const button = document.createElement('button');
     button.innerText = 'Fill tables with new random data and render graphs';
     button.addEventListener('click', handleFillTablesValues);
@@ -59,6 +61,8 @@ function calculateAverageTableData() {
 
 //Table creation
 function createRows(data, tableId) {
+    // Закомментирован второй вариант как мы могли бы получать index и ось координаты
+    // через добавление data-attribute
     const tBody = tableId.tBodies[0];
     data.forEach((coords, i) => {
         const row = document.createElement('tr');
@@ -76,6 +80,7 @@ function createRows(data, tableId) {
             cell.appendChild(input);
             row.appendChild(cell);
         }
+        // У третьей таблицы нет кнопки delete в строке, создаем кнопку только для первых двух таблиц
         if (tableId.id !== 'average') {
             const delButton = document.createElement('button');
             delButton.innerText = 'Delete';
@@ -115,6 +120,7 @@ function createTable(data, tableId) {
 
 //Graphs
 function drawGraphs() {
+    // Если на странице уже отрендерены графики, то удаляем их и рендерим заново
     if (document.getElementById('graphs')) {
         document.getElementById('graphs').remove()
     }
@@ -151,10 +157,14 @@ function renderGraph(id) {
     const shrinkMultiplier = 0.9;
     const grayColor = '#bbb';
     const blackColor = '#000';
-    const graphColor = 'red'
+    const graphColor = 'red';
+    const markWidth = canvasWidth - xPadding;
+    const markHeight = 1;
+    const xAxisTextOffsetY = 20;
     c.clearRect(0, 0, canvasWidth, canvasHeight);
     c.textAlign = "center";
 
+    // Код не оптимален, писал максимально просто
     function getMaxValueOnAxis(values, axis) {
         let max = -10 ^ 9;
         for (const value of values) {
@@ -180,14 +190,12 @@ function renderGraph(id) {
     c.fillStyle = grayColor;
 
     //Text and marks along axis
-    const markWidth = canvasWidth - xPadding;
-    const markHeight = 1;
-    const xAxisTextOffsetY = 20;
-
     //X AXIS
-
+    // Не до конца реализованная адаптивность оси для больших значений
     const axisStepX = getMaxValueOnAxis(data[id], 'x') > 200 ? 100 : 10;
 
+    // Функция вычисления координаты Х canvas в Декартову.
+    // shrinkMultiplier нужен, чтобы график не "упирался" в край
     function calcX(value) {
         const offset = Math.floor(getMaxValueOnAxis(data[id], 'x') / axisStepX);
         const finalCoords = ((canvasWidth - xPadding) / offset * value / axisStepX + xPadding) * shrinkMultiplier;
@@ -196,11 +204,12 @@ function renderGraph(id) {
 
     for (let i = 0; i <= getMaxValueOnAxis(data[id], 'x'); i += axisStepX) {
         c.fillStyle = blackColor;
+        //Рисуем черную главную ось и черные надписи
         if (i === 0) {
             c.fillRect(xPadding, 0, 2, canvasHeight - yPadding);
         }
-        c.fillStyle = blackColor;
         c.fillText(String(i), calcX(i), canvasHeight - yPadding + xAxisTextOffsetY);
+        // Рисуем серым цветом промежуточные оси
         c.fillStyle = grayColor;
         if (i > 0) {
             c.fillRect(calcX(i), canvasHeight - yPadding - markWidth, markHeight, markWidth);
@@ -208,6 +217,7 @@ function renderGraph(id) {
     }
 
     // Y AXIS
+    // По аналогии с осью Х делаем для оси Y.
     c.textAlign = "right"
     c.textBaseline = "middle";
 
@@ -234,13 +244,14 @@ function renderGraph(id) {
 
     c.lineWidth = 2;
     c.strokeStyle = graphColor;
+    // Перемещаем "курсор" в координаты первой точки
     c.moveTo(
         calcX(data[id][0].x),
         calcY(data[id][0].y)
     );
 
     c.fillStyle = blackColor;
-
+    // В цикле проходим далее по координатам
     for (let i = 1; i < data[id].length; i++) {
         c.lineTo(
             calcX(data[id][i].x),
@@ -248,16 +259,17 @@ function renderGraph(id) {
         );
 
     }
+    // Отображаем линию
     c.stroke();
 
     c.textAlign = "center"
     c.textBaseline = "bottom";
-
+    // Добавляем около точек точные координаты. Отдельным циклом, чтобы надпись была "над" линией и читалась.
     for (let i = 0; i < data[id].length; i++) {
         c.fillText(`(${data[id][i].x}, ${data[id][i].y})`, calcX(data[id][i].x), calcY(data[id][i].y) - 10);
     }
 }
-
+// Graph helpers
 function setRandomYValue() {
     return Math.ceil(Math.random() * (100 + 50)) - 50;
 }
@@ -305,6 +317,7 @@ function handleAddCoordinate(e) {
 }
 
 function handleInputChange(e) {
+    // Закомментирован второй вариант к значениям индекса и оси координаты.
     const tableId = e.target.closest('table').id;
     // const index = e.target.closest('tr').dataset.index;
     const index = [...e.target.closest('tbody').children].indexOf(e.target.closest('tr'));
