@@ -1,0 +1,21 @@
+#app {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+#graphs {
+    flex: 0 0 100%;
+    display: flex;
+    gap: 1rem;
+}
+input {
+    width: 3rem;
+}
+
+button {
+    width: 100%;
+}
+table {
+}
